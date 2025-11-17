@@ -11,6 +11,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         int width;
         int height;
         Image image;
+        String ghostName = "";
 
         int startX;
         int startY;
@@ -123,6 +124,53 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
     int score = 0;
     int lives = 3;
     boolean gameOver = false;
+    Node[][] graph;
+
+    class Node {
+        int row, col;
+        java.util.List<Node> neighbors = new java.util.ArrayList<>();
+
+        Node(int r, int c) {
+            this.row = r;
+            this.col = c;
+        }
+    }
+
+    private void buildGraph() {
+        graph = new Node[rowCount][columnCount];
+
+        // 1️⃣ Create nodes for all NON-wall tiles
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < columnCount; c++) {
+                if (tileMap[r].charAt(c) != 'X') {
+                    graph[r][c] = new Node(r, c);
+                }
+            }
+        }
+
+        // 2️⃣ Add edges (neighbors) to each node
+        for (int r = 0; r < rowCount; r++) {
+            for (int c = 0; c < columnCount; c++) {
+                if (graph[r][c] == null) continue; // skip walls
+
+                // Up
+                if (r > 0 && graph[r - 1][c] != null)
+                    graph[r][c].neighbors.add(graph[r - 1][c]);
+
+                // Down
+                if (r < rowCount - 1 && graph[r + 1][c] != null)
+                    graph[r][c].neighbors.add(graph[r + 1][c]);
+
+                // Left
+                if (c > 0 && graph[r][c - 1] != null)
+                    graph[r][c].neighbors.add(graph[r][c - 1]);
+
+                // Right
+                if (c < columnCount - 1 && graph[r][c + 1] != null)
+                    graph[r][c].neighbors.add(graph[r][c + 1]);
+            }
+        }
+    }
 
     PacMan() {
         initializeGame();
@@ -135,6 +183,7 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
         setFocusable(true);
         loadImages();
         loadMap();
+        buildGraph();   // Build the graph after loading the map
         initializeGhosts();
         startGameLoop();
     }
@@ -180,20 +229,24 @@ public class PacMan extends JPanel implements ActionListener, KeyListener {
                     Block wall = new Block(wallImage, x, y, tileSize, tileSize);
                     walls.add(wall);
                 }
-                else if (tileMapChar == 'b') { //blue ghost
-                    Block ghost = new Block(blueGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(ghost);
-                }
-                else if (tileMapChar == 'o') { //orange ghost
-                    Block ghost = new Block(orangeGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(ghost);
-                }
-                else if (tileMapChar == 'p') { //pink ghost
-                    Block ghost = new Block(pinkGhostImage, x, y, tileSize, tileSize);
-                    ghosts.add(ghost);
-                }
-                else if (tileMapChar == 'r') { //red ghost
+                else if (tileMapChar == 'r') { // RED = BLINKY
                     Block ghost = new Block(redGhostImage, x, y, tileSize, tileSize);
+                    ghost.ghostName = "blinky";
+                    ghosts.add(ghost);
+                }
+                else if (tileMapChar == 'p') { // PINK = PINKY
+                    Block ghost = new Block(pinkGhostImage, x, y, tileSize, tileSize);
+                    ghost.ghostName = "pinky";
+                    ghosts.add(ghost);
+                }
+                else if (tileMapChar == 'b') { // BLUE = INKY
+                    Block ghost = new Block(blueGhostImage, x, y, tileSize, tileSize);
+                    ghost.ghostName = "inky";
+                    ghosts.add(ghost);
+                }
+                else if (tileMapChar == 'o') { // ORANGE = CLYDE
+                    Block ghost = new Block(orangeGhostImage, x, y, tileSize, tileSize);
+                    ghost.ghostName = "clyde";
                     ghosts.add(ghost);
                 }
                 else if (tileMapChar == 'P') { //pacman
